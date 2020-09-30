@@ -1,0 +1,103 @@
+MyProjectDocs.mkd: COM3505 project documentation
+===
+
+COM3505 Assessment 2 - Thermal Imaging Camera
+
+Description of project:
+The project at hand is designing and implementing a thermal imaging camera. As the  thermal imaging camera views the world, the user will be able to store the current view either temporarily (lost when powered down) or permanently on the SD card. Meanwhile, the user can change the settings of the thermal imaging camera, such as: interpolation rate, sensitivity of camera and sensitivity change rate.
+
+
+Uses:
+The use for this is to capture thermal images of the surrounding environment and determine the temperature at key points of interest. Firefighters could use this device to help determine dangerous hotspots of a burning building and strategise a way around this obstacle as to avoid casualties and navigate through the burning building safely. It could also be used to identify key changes in temperature such as people within the burning building so they can be rescued as quickly as possible with no need to traverse the building to try and find them. Another example in the public sector is the police. Workers in the industry field could use it to identify hotspots within the buildings which will then help the workers to improve on the heat distribution and cooling [1]. The camera can be used by physiological departments to take thermal images of patients to see if they may be suffering from a fever [1]. These thermal images can then be used to further analyse the patient's body temperature to find the problem that is causing the body to overheat. Railway maintenance workers could use this to determine faults in wires and eliminate potential failures [1]. It could also be used for educational purposes to teach students about chemical reactions that may produce more heat than others.
+
+
+Implementation:
+Iot_assignemnt starts the process of linking all of the files together, through the UIController. The main part of this file is to initialize the UnPhone, WiFi provisioning, Over the Air firmware update and load the SD card. 
+
+The UIController file defines all of the global variables and what a UIElement is and how they interact with each other. It also contains methods on how the touch screen should be processed when interacted with. 
+
+Each of the UIElement files have a handle touch method. That when given a (x,y) coordinate, the file applies a specified function. All of the UIElements also have the following methods mapTextTouch, draw and runEachTurn. However these methods will have a specific role for each of the UIElements.  Meanwhile, the runEachTurn method, is empty for each of the UIElements. The UIElements are: menu, thermal imaging camera, sensitivity, interpolation and image display.
+
+The menu (shown in image_1) UIElement is the first page the user interacts with. The screen shows the other UIElements, with an arrow that navigates to them when touched. The interface shown on the screen iterates through the number of user interface elements (i.e. the number of pages) and prints them to the page separated by a horizontal line to separate each page which makes it easier to distinguish the correct arrow to navigate to the desired page. 
+
+The thermal camera page (shown in image_2) is the first available page in the menu. Once the user has navigated to the page the screen will display the interpolation rate, the minimum and maximum of live temperatures, saved minimum and maximum temperatures, a temperature range, gradient of the colour pixels for each temperature and the thermal imaging display. 
+The interpolation rate determines at what scale the thermal image will be displayed at and is decided by the value chosen on the interpolation page. The minimum and maximum temperatures are printed by taking points on the thermal camera and constantly updating the new numbers and printing them on the screen. Temperature gradient uses the global minimum and maximum values set in the sensitivity UIElement. Each temperature is shown on a scale from the coldest temperature to the hottest temperature set. This is done by sorting the  colour indexes in a separate array so that the gradient goes from low (blue) to high (red). Images can be saved locally (clicking button 2) or on the SD card (clicking button 3).  Once button 3 is clicked, multiple mutable filenames are generated and checks if it exists on the SD card. If it doesn't then use that filename to save the current array and write it to the image page. To show the thermal image the AMG8833 sensor reads the data in to the pixels array and draws the pixels to the screen according to the temperature of the pixel.
+
+The change sensitivity page (shown in image_3) is responsible for changing the minimum and maximum temperature range in which the camera sees which creates an accurate thermal gradient for a more detailed image. This is done on three scales; 1, 2 and 5 degrees. When a scale is chosen the user can then either increase or decrease the minimum and maximum temperature range. The values are global and stored in the UIController making them accessible by all classes.  The global values are modified depending on whether the values are incremented or depleted via the buttons located on the screen. The minimum value has a minimum of 0 and a maximum of 90. The maximum value has a  maximum of 120 and a minimum of +10 for the minimum value so the two values can not cross or be too close to each other.
+
+The interpolation page (shown in image_4) allows the user to set the interpolation of the thermal camera on a scale of 1, 2 and 3. This is to increase the number of pixels used by scaling the original 8x8 pixel interpolation (scale 1 interpolation) by the scaling factors 2 and 3. Depending on what aspect of the screen has been touched, the correct statement will be executed accordingly. The first checks if the '1' has been pressed, the second checks if the '2' has been pressed and the third checks if the '3' has been pressed. After determining which interpolation is chosen, the display is then updated with the corresponding interpolation factor chosen. 
+
+The image page (shown in image_5) is responsible for viewing all images taken and and stored on the thermal camera. This class uses similar methods to that of the thermal imaging camera as it requires the same process to process the images. It does this by reading from the SD card, after splitting the string and writing the data to an array. The data stored in the array is converted into floats. The interpolated images are displayed by applying the draw pixels method to float array. When an image is pressed, the specified array will be expanded and cover the other images. Then when clicked again, the image will disappear and display all images on the screen.
+
+Safety of device:
+Protective case to protect the thermal camera from as much damage as possible when dropped.
+Battery is prone to explosions if not looked after properly
+
+
+Updating:
+Over-the-air(OTA) updating allows the user to update over a wifi/ network connection. 
+OTA updating is used to deploy the latest firmware to the device. OTA
+updates should be encrypted, authenticated and delivered to the device through
+a secure protocol.
+
+In the mobile telecommunications industry, OTA updating allows organisations to send updates out to remote mobile devices[2]. Other industries such as automotive[3], use OTA to update their vehicles firmware outside of a garage will save the industry money and time. The purpose can be seen by these two industries because both have a large number of devices out in the world. With each device needing to be up to date so that customers don’t notice the aging of their devices, this can be done by smart implementation of updates.
+
+An example of the automotive industry updating their firmware through OTA is Tesla increasing the vehicle’s battery range, some of Florida’s residents trying to escape Hurricane Irma[4]. 
+
+
+Security:
+Any possibility of writing information on the device has been eliminated so no malicious data can be loaded onto the device and spread through over the air updating or wifi configuration. Only the data present on the device can be modified in the specific way denoted in the methods called depending on where on the screen is touched.
+
+Access to the data on the SD card is limited to owners of the SD card so the data can’t be modified by a third party source. The data from the SD files is read in as strings. The only use for these strings is to split and convert the data  into floats of 5 characters long. The splitting of the string cuts out commas in the file so any data that either does not have the set number of 5 characters per float to split, or if the float conversion fails then no harmful data will be accepted. The SD card has eliminated the use of a database which has prevented all risks of sql injection attacks, brute-force attacks and stolen storage devices. 
+
+
+Testing:
+Here pictures of a hot coffee (shown in image_6) and hot food (shown in image_7) have been captured on seperate interpolations. The picture of the hot coffee has been captured on a level 3 interpolation and the picture of the hot food has been captured on a level 1 interpolation. This shows the greater detail present on the image of the higher interpolation compared to the lower interpolation.
+
+The pictures above (shown in image_8 and image_9) show that the camera can distinguish space between two objects connected together. The first image shows the heat map of two fingers closed together. This is represented by a heat blob on the screen which is as expected. The second image shows the same two fingers but open with a gap in between. This shows that the camera can distinguish different heat temperatures from the point of interest and the environment.
+
+The top two images (shown in image_10 and image_11)show two images being saved on the SD card by clicking button 3 (left) and locally by clicking button 2 (right). The third picture (shown in image_12) represents what the user will see on the image page. As you can see images have been saved locally and one has been saved to the SD card.
+
+Measuring a cup of water
+                         
+The temperature of the water, when testing, was around 58 to 60 degrees celsius (oC) on the digitron thermometer(shown in image_13). When assessed with the unPhone, the reading was in the range of 55oC to 70oC (shown in image_14), depending on the distance to the water. When measured around 7cm away from the surface of water, the unPhone was able to get a similar reading of 59C. When measuring from the side of the cup, the unPhone measures 54oC. Showing that the cup wall reflected some heat back into the water. The 70oC measuring of the water on the unPhone happened when the unPhone was 1cm to 2cm away from the surface. The assumption would be that the AMG8833 sensor cannot work correctly under these circumstances. 
+
+
+Future enhancements:
+Different colour themes:
+Currently the thermal camera only processes thermal images in one colour theme. This could cause potential difficulties in usage for people who are colour blind or suffer from other visual impairments. This could be avoided by adding functionality to change the colour theme of the system to make the thermal images easier to read. These settings will be adjustable with multiple themes to make sure all potential impairments are covered and the device can be used by all users.
+
+Store many more images on different pages:
+The camera can only store a maximum of 9 images on the device which limits the usage of the device when used in one sitting. For example, if the device was to be used by maintenance to inspect heat pockets or leaks within a building then, depending on how much ground is being covered, 9 images may not be enough to hold a detailed enough analysis of the environment on site. So images will need to be taken of all areas of interest then the sd card will need to be inserted into a machine to access the files. So having multiple pages to store many more images will save costs in time as on site analysis can be completed and solutions can be met quicker.
+
+Add higher interpolation levels:
+Increasing the number of interpolation levels will generate smoother and more detailed images thus increasing maximum precision for the thermal maps and map all pixels to their correct heat signatures. This will make the device more usable for a larger pool of industry networks as some may need a higher level of interpolation to denote a larger heat signatures. For example, if firefighters were to use the device to assess a burning building, using a lower interpolation rate will mean that the imaging will be broad and could possibly map higher heat signatures to irrelevant pixels thus giving false readings which could lead to potential dangers (i.e. a room may not be as hot as it appears on the screen which could lead to a civilian casualty).
+
+Multiple cameras:
+Currently the camera only has a peripheral vision of 60o which limits the area visualised on the screen hence, more images will be required to analyse a large area. Adding multiple cameras to the device will prevent this by increasing the area coverage making the camera usable in large scale industry sectors. 
+
+Graphs:
+The ability to store and show graphs on the device will increase the usability of the device as before and after thermal images of work done can be compared via a graph to show potential improvements or potential failures. This will help identify direct links between the environment and heat signatures and show a direct correlation between data points to maximise all possibilities of creating solutions. This will also make the device more applicable to a wide range of industry sectors that require all possible data to be accessible efficiently on site.
+
+Minimum and maximum temperature pointers:
+The minimum and maximum temperatures will be pinpointed on the lcd screen so the user knows exactly where the coldest and hottest areas are in the area of interest. 
+
+Minimum and maximum temperature range adaptability:
+The minimum and maximum temperature range will change according to the readings on the screen when the thermal camera is open. This will make the device more efficient by preventing the need of constant navigation to the sensitivity page to adapt the readings yourself. The range will change according to present temperatures i.e. if a reading shows a maximum temperature of 90o then the maximum range will change to 90o but then if the next max reading is 85o then the maximum range will change to 85o. The same will apply to the minimum reading. The gradient shown on the screen will change according to these values and give a more detailed representation of the current temperature scale.
+
+Zoom functionality to enhance environment image and interpolate individual pixels:
+Zooming functionality will increase the safety of using the device as users won’t be required to enter any potential dangerous heat pockets but will still be able to get readings on the key area. Interpolation of individual pixels will be included in this enhancement to further increase the detail of the desired space in the environment.
+
+Better quality casing that holds the camera:
+A higher quality material can be used to encase the device to protect the components inside and minimise all damages as much as possible. A polycarbonate compound could be used which is lightweight and durable (i.e. resistant to huge temperature changes) to encase the components, increasing the adaptability to different environments than the current level. Doing this creates a more appealing device to numerous industries as the probability of needing a replacement is decreased.
+
+Save images as png:
+Currently the device saves the images as a text file populated with temperature readings at each pixel on the camera and stores as floats within the file. This means that when you plug the sd card into a machine it will only appear to the user as a line of numbers. So saving the file as an image file will allow users to view the images on a machine and use them in presentations when to describe the current state of the image and help visualise the effects of solutions or further failures.
+
+References:
+[1] Top Uses and Applications of Thermal Imaging Cameras - Quick Tips #345 - Grainger Industrial Supply.
+[2] AT&T Intellectual Property I LP (2019). Coordinating firmware over-the-air updates for mobile devices utilizing presence information. US8589910B2.
+[3] Odat, H. (2019). Firmware over the air for automotive, Fotamotive - IEEE Conference Publication. [online] Ieeexplore.ieee.org. Available at: https://ieeexplore.ieee.org/abstract/document/6871751/metrics#metrics [Accessed 9 Nov. 2019].
+[4] Lambert, F. (2019). Tesla remotely extends range of vehicles for free in Florida to help owners escape Hurricane Irma - Electrek. [online] Electrek. Available at: https://electrek.co/2017/09/09/tesla-extends-range-vehicles-for-free-in-florida-escape-hurricane-irma/ [Accessed 9 Nov. 2019]
+
+
